@@ -118,7 +118,7 @@ Page {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: tools.shown = !tools.shown
+                onClicked: page.processClick(mouse)
             }
         }
     }
@@ -130,6 +130,10 @@ Page {
         contentX: flick.contentX
         contentY: flick.contentY
         zoom: docSettings.zoom
+    }
+
+    function processClick(mouse) {
+        tools.shown = !tools.shown
     }
 
     Row {
