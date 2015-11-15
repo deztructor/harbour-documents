@@ -61,12 +61,14 @@ Page {
 
         readonly property int maxPosition: contentHeight - height
 
-        function pagePrev() {
-            var newY = flick.contentY - height
+        function pagePrev(pos) {
+            var overlap = height / 16 + (pos ? pos.y : 0)
+            var newY = flick.contentY - height + overlap
             updateCurrentPosition(newY > 0 ? newY : 0)
         }
-        function pageNext() {
-            var newY = flick.contentY + height
+        function pageNext(pos) {
+            var overlap = height / 16 + (pos ? height - pos.y : 0)
+            var newY = flick.contentY + height - overlap
             updateCurrentPosition(newY > maxPosition ? maxPosition : newY)
         }
 
@@ -119,6 +121,11 @@ Page {
             MouseArea {
                 anchors.fill: parent
                 onClicked: page.processClick(mouse)
+                onPressAndHold: page.showHint("stickyHint")
+                onReleased: {
+                    if (page.state === "stickyHint")
+                        page.hideHint()
+                }
             }
         }
     }
@@ -131,11 +138,109 @@ Page {
         contentY: flick.contentY
         zoom: docSettings.zoom
     }
-
-    function processClick(mouse) {
-        tools.shown = !tools.shown
+    property point activeAreasCount: Qt.point(1, 5)
+    property point activeAreaSize: Qt.point(flick.width / activeAreasCount.x
+                                            , flick.height / activeAreasCount.y)
+    // from/to are quadrants
+    function activeAreaRect(fromX, fromY, toX, toY) {
+        var dx = toX - fromX
+        var dy = toY - fromY
+        return Qt.rect(activeAreaSize.x * fromX, activeAreaSize.y * fromY,
+                       activeAreaSize.x * dx, activeAreaSize.y * dy)
     }
 
+    readonly property var activeAreas: [
+        { action: "pageUp",
+          area: activeAreaRect(0, 0, 1, 2),
+          hintColor: "green",
+          text: "Page Up"
+        },
+        { action: "toggleMenu",
+          area: activeAreaRect(0, 2, 1, 3),
+          hintColor: "red",
+          text: "Toggle Menu"
+        },
+        { action: "pageDown",
+          area: activeAreaRect(0, 3, 1, 5),
+          hintColor: "blue",
+          text: "Page Down"
+        }
+    ]
+
+    function withinArea(pos, area) {
+        return (pos.x >= area.x && pos.y >= area.y
+                && pos.x - area.x < area.width
+                && pos.y - area.y < area.height)
+    }
+
+    property real hintOpacity: 0.0
+    Behavior on hintOpacity { FadeAnimation {} }
+
+    Timer {
+        id: hideHintsTimer
+        interval: 700
+        onTriggered: page.hideHint()
+    }
+
+    property variant areas: []
+    Component.onCompleted: {
+        showHint()
+        for (var i = 0; i < activeAreas.length; ++i) {
+            areaHintComponent.createObject(page, activeAreas[i]);
+        }
+    }
+
+    function invokeAction(context, pos) {
+        var name = context.action
+        switch (name) {
+        case "pageUp":
+            flick.pagePrev(pos)
+            break
+        case "pageDown":
+            flick.pageNext(pos)
+            break
+        case "toggleMenu":
+            tools.shown = !tools.shown
+            break
+        default:
+            console.log("Unknown action", name)
+            break
+        }
+    }
+
+    function processClick(mouse) {
+        var pos = Qt.point(mouse.x - flick.contentX,
+                           mouse.y - flick.contentY)
+        for (var i = 0; i < activeAreas.length; ++i) {
+            var context = activeAreas[i]
+            if (withinArea(pos, context.area)) {
+                invokeAction(context, pos)
+                return
+            }
+        }
+        showHint()
+    }
+
+    function showHint(newState) {
+        hintOpacity = 0.3
+        if (!newState)
+            hideHintsTimer.running = true
+        else
+            state = newState
+    }
+
+    function hideHint() {
+        hintOpacity = 0.0
+        state = ""
+    }
+
+    Component {
+        id: areaHintComponent
+        AreaHint {
+            hintOpacity: page.hintOpacity
+        }
+    }
+    
     Row {
         id: tools
         property bool shown: true

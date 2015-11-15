@@ -12,5 +12,6 @@
     <file>ConfigSwitch.qml</file>
     <file>DocumentOutlinePage.qml</file>
     <file>ZoomingButton.qml</file>
+    <file>AreaHint.qml</file>
   </qresource>
 </RCC>
