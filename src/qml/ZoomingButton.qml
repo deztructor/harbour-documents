@@ -13,7 +13,7 @@ MouseArea {
     width: itemSizePressed
     height: width
 
-    property real enabledOpacity: 0.8
+    property real enabledOpacity: 1.0
     property real disabledOpacity: 0.4
 
     onPressedChanged: {

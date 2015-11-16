@@ -38,13 +38,7 @@ Page {
             }
         }
 
-        anchors {
-            top: parent.top
-            left: parent.left
-            right: parent.right
-            bottom: tools.top
-        }
-
+        anchors.fill: parent
         contentWidth: doc.width * view.dpiX
         contentHeight: doc.height * view.dpiY
         boundsBehavior: Flickable.StopAtBounds
@@ -240,57 +234,71 @@ Page {
             hintOpacity: page.hintOpacity
         }
     }
-    
-    Row {
+
+    Item {
         id: tools
-        property bool shown: true
+        property bool shown: false
         property bool _shown: shown && view.scale == 1.0 && doc.state == Document.Loaded
         visible: height > 0
-        spacing: Theme.paddingMedium
-
         anchors {
-            horizontalCenter: parent.horizontalCenter
+            left: parent.left
+            right: parent.right
             bottom: parent.bottom
         }
-
         height: _shown ? Theme.itemSizeMedium + spacing * 2 : 0
+        property int spacing: Theme.paddingMedium
+        Rectangle {
+            opacity: tools.shown ? 0.4 : 0.0
+            anchors.fill: parent
+            color: "black"
+            Behavior on opacity { FadeAnimation {} }
+        }
+        Row {
+            spacing: parent.spacing
 
-        Behavior on height {
-            NumberAnimation { duration: 200 }
-        }
-
-        ZoomingButton {
-            icon.source: "image://svg/books.svg"
-            onClicked: pageStack.pop()
-        }
-
-        ZoomingButton {
-            icon.source: "image://svg/info.svg"
-            onClicked: pageStack.push(Qt.resolvedUrl("DocumentDetailsPage.qml"), {doc: doc})
-        }
-
-        ZoomingButton {
-            icon.source: "image://svg/page-prev.svg"
-            enabled: flick.contentY > 0
-            onClicked: flick.pagePrev()
-        }
-        ZoomingButton {
-            icon.source: "image://svg/page-next.svg"
-            enabled: flick.contentY < flick.maxPosition
-            onClicked: flick.pageNext()
-        }
-        ZoomingButton {
-            icon.source: "image://svg/pages.svg"
-            onClicked: {
-                var page = pageStack.push(Qt.resolvedUrl("DocumentIndexPage.qml"), {doc: doc})
-                page.scrollTo.connect(flick.scrollToPageAndPop)
+            anchors {
+                top: parent.top
+                bottom: parent.bottom
+                horizontalCenter: parent.horizontalCenter
             }
-        }
-        ZoomingButton {
-            icon.source: "image://svg/toc.svg"
-            onClicked: {
-                var page = pageStack.push(Qt.resolvedUrl("DocumentOutlinePage.qml"), {doc: doc})
-                page.scrollTo.connect(flick.scrollToPageAndPop)
+
+            Behavior on height {
+                NumberAnimation { duration: 200 }
+            }
+
+            ZoomingButton {
+                icon.source: "image://svg/books.svg"
+                onClicked: pageStack.pop()
+            }
+
+            ZoomingButton {
+                icon.source: "image://svg/info.svg"
+                onClicked: pageStack.push(Qt.resolvedUrl("DocumentDetailsPage.qml"), {doc: doc})
+            }
+
+            ZoomingButton {
+                icon.source: "image://svg/page-prev.svg"
+                enabled: flick.contentY > 0
+                onClicked: flick.pagePrev()
+            }
+            ZoomingButton {
+                icon.source: "image://svg/page-next.svg"
+                enabled: flick.contentY < flick.maxPosition
+                onClicked: flick.pageNext()
+            }
+            ZoomingButton {
+                icon.source: "image://svg/pages.svg"
+                onClicked: {
+                    var page = pageStack.push(Qt.resolvedUrl("DocumentIndexPage.qml"), {doc: doc})
+                    page.scrollTo.connect(flick.scrollToPageAndPop)
+                }
+            }
+            ZoomingButton {
+                icon.source: "image://svg/toc.svg"
+                onClicked: {
+                    var page = pageStack.push(Qt.resolvedUrl("DocumentOutlinePage.qml"), {doc: doc})
+                    page.scrollTo.connect(flick.scrollToPageAndPop)
+                }
             }
         }
     }
