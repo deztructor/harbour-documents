@@ -28,6 +28,14 @@ Page {
         running: doc.state == Document.Loading
     }
 
+    DocumentView {
+        id: view
+        anchors.fill: flick
+        document: doc.state == Document.Loaded ? doc : null
+        contentX: flick.contentX
+        contentY: flick.contentY
+        zoom: docSettings.zoom
+    }
     SilicaFlickable {
         id: flick
         contentX: docSettings.position.x
@@ -124,14 +132,6 @@ Page {
         }
     }
 
-    DocumentView {
-        id: view
-        anchors.fill: flick
-        document: doc.state == Document.Loaded ? doc : null
-        contentX: flick.contentX
-        contentY: flick.contentY
-        zoom: docSettings.zoom
-    }
     property point activeAreasCount: Qt.point(1, 5)
     property point activeAreaSize: Qt.point(flick.width / activeAreasCount.x
                                             , flick.height / activeAreasCount.y)
